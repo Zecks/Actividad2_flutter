@@ -1,0 +1,7 @@
+{
+  "events": [
+    { "id": 1, "title": "Festival de Jazz", "category": "Música" },
+    { "id": 2, "title": "Teatro Clásico", "category": "Teatro" },
+    { "id": 3, "title": "Conferencia IA", "category": "Cultura" }
+  ]
+}
