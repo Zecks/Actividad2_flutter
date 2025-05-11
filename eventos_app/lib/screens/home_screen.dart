@@ -1,50 +1,67 @@
 import 'package:flutter/material.dart';
-import '../models/event.dart';
-import '../widgets/event_card.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List<Event> events = [];
-  String selectedCity = 'Madrid';
+  List<dynamic> events = [];
 
   @override
   void initState() {
     super.initState();
-    // Cargar eventos desde API o json local aquí
+    fetchEvents();
+  }
+
+  Future<void> fetchEvents() async {
+    final response = await http.get(Uri.parse('http://10.0.2.2:3000/events'));
+    if (response.statusCode == 200) {
+      setState(() {
+        events = json.decode(response.body);
+      });
+    } else {
+      print('Error cargando eventos');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Eventos en $selectedCity')),
-      body: Column(
-        children: [
-          DropdownButton<String>(
-            value: selectedCity,
-            items: ['Madrid', 'Barcelona', 'Valencia']
-                .map((city) => DropdownMenuItem(value: city, child: Text(city)))
-                .toList(),
-            onChanged: (value) {
-              setState(() {
-                selectedCity = value!;
-              });
-            },
-          ),
-          Expanded(
-            child: ListView(
-              children: events.map((e) => EventCard(event: e)).toList(),
-            ),
-          ),
-        ],
+      appBar: AppBar(
+        title: const Text('Eventos en tu zona'),
+        backgroundColor: Colors.deepPurple,
       ),
-      floatingActionButton: ElevatedButton(
-        child: Text('Añadir Evento'),
+      body: Container(
+        color: Colors.grey[100],
+        child: ListView.builder(
+          itemCount: events.length,
+          itemBuilder: (context, index) {
+            final event = events[index];
+            return Card(
+              margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              elevation: 3,
+              child: ListTile(
+                leading: const Icon(Icons.event, color: Colors.deepPurple),
+                title: Text(event['title'], style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text(event['category']),
+              ),
+            );
+          },
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.deepPurple,
+        child: const Icon(Icons.add),
         onPressed: () {
-          Navigator.pushNamed(context, '/add');
+          Navigator.pushNamed(context, '/form').then((_) {
+            fetchEvents(); // Refrescar al volver del formulario
+          });
         },
       ),
     );
